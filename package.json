@@ -1,0 +1,32 @@
+{
+  "name": "repo",
+  "version": "1.0.0",
+  "description": "A responsive, single-page website starter using the supplied Vantage logo. Built with plain HTML, CSS and JavaScript so it can be uploaded from an iPad without a build step.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://x-access-token:ghs_13473_eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRobmQiLCJjdHgiOiJ3dEVEbTlJMGJjbUttMVNTclpPV01MN3M5REZRbGx5alBvZmc2cm9yYXNBcVNnTzdKM2ozYzhTZFNBIiwiZXhwIjoxNzkxMzE1MDE4LCJpYXQiOjE3OTEzMTE0MTgsImlzcyI6ImdpdGh1YiIsImp0aSI6IjUxNDE4NmQ1LWQ2NjQtNDM5My1hN2RlLTAyOWU1Y2QyYTg0OSIsInZlciI6M30.ufRElJWlY-MzoQGN8je85qsYxdqcMyquPb3pc3-1ShmAbc3VXE3pPgYcNOUKhvfO0qr_HfHMGb5SdGXIJRlPGg@github.com/velocitytalks086-a11y/Web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/velocitytalks086-a11y/Web/issues"
+  },
+  "homepage": "https://github.com/velocitytalks086-a11y/Web#readme",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3",
+    "@netlify/database": "^2.0.1",
+    "@netlify/functions": "^6.0.2",
+    "drizzle-orm": "^1.0.0-beta.22"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "drizzle-kit": "^1.0.0-beta.22",
+    "typescript": "^7.0.2"
+  }
+}
