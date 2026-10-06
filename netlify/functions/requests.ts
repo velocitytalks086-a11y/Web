@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { products, requests } from "../../db/schema.js";
+import { bump } from "../../lib/sync.js";
 import { isAdmin, unauthorized, uid, str } from "../../lib/admin.js";
 
 const STATUSES = ["Pending", "In review", "Approved", "Closed"];
@@ -23,6 +24,7 @@ export default async (req: Request, context: Context) => {
     const [product] = await db.select().from(products).where(eq(products.id, r.productId));
     if (!product) return Response.json({ error: "Please choose a product" }, { status: 400 });
     const [row] = await db.insert(requests).values({ id: uid(), ...r, productName: product.name }).returning({ id: requests.id });
+    await bump("requests");
     return Response.json(row, { status: 201 });
   }
 
@@ -37,11 +39,13 @@ export default async (req: Request, context: Context) => {
     const { status } = await req.json();
     if (!STATUSES.includes(status)) return Response.json({ error: "Invalid status" }, { status: 400 });
     const [row] = await db.update(requests).set({ status, updatedAt: new Date() }).where(eq(requests.id, id)).returning();
+    if (row) await bump("requests");
     return row ? Response.json(row) : Response.json({ error: "Not found" }, { status: 404 });
   }
 
   if (req.method === "DELETE" && id) {
     await db.delete(requests).where(eq(requests.id, id));
+    await bump("requests");
     return Response.json({ ok: true });
   }
 

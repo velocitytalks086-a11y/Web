@@ -27,3 +27,11 @@ export const requests = pgTable("requests", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// One row per data set; the version is bumped on every write so open pages
+// can be told about changes the moment they happen.
+export const syncState = pgTable("sync_state", {
+  scope: text().primaryKey(),
+  version: integer().notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

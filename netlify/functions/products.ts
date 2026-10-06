@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { asc, eq, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { products } from "../../db/schema.js";
+import { bump } from "../../lib/sync.js";
 import { isAdmin, unauthorized, uid, str } from "../../lib/admin.js";
 
 const ACCESS = ["request", "direct", "both"];
@@ -33,6 +34,7 @@ export default async (req: Request, context: Context) => {
     if (!p.name) return Response.json({ error: "Name is required" }, { status: 400 });
     const [{ next }] = await db.select({ next: sql<number>`coalesce(max(${products.sortOrder}), 0) + 1` }).from(products);
     const [row] = await db.insert(products).values({ id: uid(), ...p, sortOrder: Number(next) }).returning();
+    await bump("products");
     return Response.json(row, { status: 201 });
   }
 
@@ -40,11 +42,13 @@ export default async (req: Request, context: Context) => {
     const p = clean(await req.json());
     if (!p.name) return Response.json({ error: "Name is required" }, { status: 400 });
     const [row] = await db.update(products).set({ ...p, updatedAt: new Date() }).where(eq(products.id, id)).returning();
+    if (row) await bump("products");
     return row ? Response.json(row) : Response.json({ error: "Not found" }, { status: 404 });
   }
 
   if (req.method === "DELETE" && id) {
     await db.delete(products).where(eq(products.id, id));
+    await bump("products");
     return Response.json({ ok: true });
   }
 

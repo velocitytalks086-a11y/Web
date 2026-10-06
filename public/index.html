@@ -55,7 +55,7 @@
 <div class="admin-layout hidden" id="adminApp">
   <div class="admin-top"><a class="brand" href="#"><span>VANTAGE<small>ADMIN CONSOLE</small></span></a><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="document.getElementById('productEditor').scrollIntoView({behavior:'smooth'})">Add product +</button><button class="btn small" onclick="closeAdmin()">Exit admin</button></div></div>
   <div class="admin-content"><div class="eyebrow"><span class="dot"></span> Workspace overview</div><h1 style="font-size:clamp(34px,6vw,56px);letter-spacing:-.06em;margin:12px 0">Good to see you.</h1><p class="muted">Manage your product catalogue and keep track of incoming requests.</p>
-    <div class="notice" id="syncNotice">Live sync · Changes are published instantly and appear for every visitor worldwide within seconds.</div>
+    <div class="notice" id="syncNotice">Live sync · Changes are published instantly and appear for every visitor worldwide in real time.</div>
     <div class="stats"><div class="stat"><span>Published products</span><strong id="statProducts">0</strong></div><div class="stat"><span>Total requests</span><strong id="statRequests">0</strong></div><div class="stat"><span>Pending requests</span><strong id="statPending">0</strong></div></div>
     <div class="admin-columns">
       <div>
@@ -68,9 +68,9 @@
 </div>
 <div id="toast" class="toast hidden"></div>
 <script>
-// Data lives in Netlify Database and is shared by every visitor. The page polls
-// the API so changes made anywhere show up for everyone within a few seconds.
-const POLL_MS = 4000;
+// Data lives in Netlify Database and is shared by every visitor. Changes made
+// anywhere are pushed to every open page in about a second.
+const POLL_MS = 30000;
 const ADMIN_KEY = "vantageAdminCode";
 let data={products:[],requests:[]}, currentRequestProduct="", adminCode=sessionStorage.getItem(ADMIN_KEY)||"";
 let lastProducts="", lastRequests="";
@@ -92,7 +92,18 @@ async function refresh(){
   if(adminCode&&isAdminOpen()){const reqs=await api("/api/requests");const rs=JSON.stringify(reqs);if(rs!==lastRequests){lastRequests=rs;data.requests=reqs;renderAdmin()}}
  }catch(e){console.warn("Sync failed",e)}
 }
-function startSync(){refresh();setInterval(()=>{if(!document.hidden)refresh()},POLL_MS);document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()})}
+// Realtime: the server pushes a tiny version event the moment anything changes,
+// and the page then fetches fresh data. A slow poll covers dropped connections.
+let liveVersions={};
+function startSync(){
+ refresh();
+ if("EventSource" in window){
+  const es=new EventSource("/api/live");
+  es.onmessage=e=>{try{const v=JSON.parse(e.data);const changed=v.products!==liveVersions.products||(adminCode&&v.requests!==liveVersions.requests);liveVersions=v;if(changed)refresh()}catch(err){}};
+ }
+ setInterval(()=>{if(!document.hidden)refresh()},POLL_MS);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
+}
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function fmtDate(d){return d?new Date(d).toLocaleString():""}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2600)}
